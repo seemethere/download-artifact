@@ -24,7 +24,7 @@ function doDownload(
 }
 
 interface S3Object {
-  Key?: string;
+  Key?: string
 }
 
 async function run(): Promise<void> {
@@ -35,11 +35,10 @@ async function run(): Promise<void> {
     const region = core.getInput(Inputs.Region, {required: false})
     const objectListInput = core.getInput(Inputs.Objects, {required: false})
 
-    let lisOfObjects: S3Object[] | undefined;
+    let lisOfObjects: S3Object[] | undefined
     if (objectListInput) {
-      lisOfObjects = JSON.parse(objectListInput);
+      lisOfObjects = JSON.parse(objectListInput)
     }
-
 
     let resolvedPath = ''
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -66,7 +65,7 @@ async function run(): Promise<void> {
         throw new Error(`Could not find objects with ${s3Prefix}`)
       }
     } else {
-      objects.Contents = lisOfObjects;
+      objects.Contents = lisOfObjects
     }
 
     core.info(
@@ -105,7 +104,7 @@ async function run(): Promise<void> {
     core.setOutput(Outputs.DownloadPath, resolvedPath)
     core.info('Artifact download has finished successfully')
   } catch (err) {
-    core.setFailed(err.message)
+    core.setFailed(`An unexpected error occurred: ${String(err)}`)
   }
 }
 
