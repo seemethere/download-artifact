@@ -16,6 +16,9 @@ inputs:
     description: >
       Region your s3 bucket is in
     default: 'us-east-1'
+  objects:
+    description: 'A list of the objects that need to be downloaded'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
