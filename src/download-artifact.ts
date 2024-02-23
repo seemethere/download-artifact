@@ -23,12 +23,23 @@ function doDownload(
   })
 }
 
+interface S3Object {
+  Key?: string;
+}
+
 async function run(): Promise<void> {
   try {
     const name = core.getInput(Inputs.Name, {required: false})
     const chosenPath = core.getInput(Inputs.Path, {required: false})
     const s3Bucket = core.getInput(Inputs.S3Bucket, {required: false})
     const region = core.getInput(Inputs.Region, {required: false})
+    const objectListInput = core.getInput(Inputs.Objects, {required: false})
+
+    let lisOfObjects: S3Object[] | undefined;
+    if (objectListInput) {
+      lisOfObjects = JSON.parse(objectListInput);
+    }
+
 
     let resolvedPath = ''
     // resolve tilde expansions, path.replace only replaces the first occurrence of a pattern
@@ -41,15 +52,23 @@ async function run(): Promise<void> {
     core.debug(`Resolved path is ${resolvedPath}`)
     const s3 = new AWS.S3({region: region})
     const s3Prefix = `${github.context.repo.owner}/${github.context.repo.repo}/${github.context.runId}/${name}/`
-    const s3Params = {
-      Bucket: s3Bucket,
-      Prefix: s3Prefix
+
+    let objects: AWS.S3.ListObjectsOutput = {Contents: []}
+
+    if (!lisOfObjects) {
+      const s3Params = {
+        Bucket: s3Bucket,
+        Prefix: s3Prefix
+      }
+      core.debug(JSON.stringify(s3Params))
+      objects = await s3.listObjects(s3Params).promise()
+      if (!objects.Contents) {
+        throw new Error(`Could not find objects with ${s3Prefix}`)
+      }
+    } else {
+      objects.Contents = lisOfObjects;
     }
-    core.debug(JSON.stringify(s3Params))
-    const objects = await s3.listObjects(s3Params).promise()
-    if (!objects.Contents) {
-      throw new Error(`Could not find objects with ${s3Prefix}`)
-    }
+
     core.info(
       `Found ${objects.Contents.length} objects with prefix ${s3Prefix}`
     )
